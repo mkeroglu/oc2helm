@@ -4,10 +4,17 @@ kind: Route
 metadata:
   name: {{ .Release.Name }}
 spec:
-  path: /
+  {{- if .Values.route.host }}
+  host: {{ .Values.route.host }}
+  {{- end }}
+  path: {{ .Values.route.path | default "/" }}
   to:
     kind: Service
     name: {{ .Release.Name }}
   port:
     targetPort: {{ .Values.route.port }}
+  {{- if eq .Values.route.tls "enabled" }}
+  tls:
+    termination: edge
+  {{- end }}
 {{- end }}
