@@ -57,7 +57,7 @@ for ((i=0; i<CONTAINERS; i++)); do
     for path in $CONFIGMAPS; do
         C_PATH=$(echo "$1" | sed "s|/[^/]*$|/$path.yaml|" | sed 's/deployment/configmap/g')
         DATA=$(yq e '.data' $C_PATH)
-        yq eval ".configMaps += [{\"name\": \"$path\", \"data\": load(\"$C_PATH\") | .data}]"  -i "$VALUES_FILE"
+        yq eval ".configMaps += [{\"create\": \"true\", \"name\": \"$path\", \"data\": load(\"$C_PATH\") | .data}]"  -i "$VALUES_FILE"
     done
   fi
 
@@ -131,7 +131,7 @@ for ((i=0; i<INITCONTAINERS; i++)); do
     for path in $CONFIGMAPS; do
         C_PATH=$(echo "$1" | sed "s|/[^/]*$|/$path.yaml|" | sed 's/deployment/configmap/g')
         DATA=$(yq e '.data' $C_PATH)
-        yq eval ".configMaps += [{\"name\": \"$path\", \"data\": load(\"$C_PATH\") | .data}]"  -i "$VALUES_FILE"
+        yq eval ".configMaps += [{\"create\": \"true\", \"name\": \"$path\", \"data\": load(\"$C_PATH\") | .data}]"  -i "$VALUES_FILE"
     done
   fi
 
@@ -189,7 +189,7 @@ yq e ".labels = \"$LABELS\"" -i "$VALUES_FILE"
 
 ############ SERVICE ############
 if [ -e "$SERVICE_FILE" ]; then
-    sayi=$(yq eval ".spec.ports[$i].port" "$SERVICE_FILE" | wc -l)
+    sayi=$(yq eval ".spec.ports[].port" "$SERVICE_FILE" | wc -l)
     sum=$(( sayi - 1))
     start=0
     type=$(yq eval '.spec.type' "$SERVICE_FILE")
@@ -228,6 +228,7 @@ if [ -e "$ROUTE_FILE" ]; then
     yq e ".route.enabled = true" -i "$VALUES_FILE"
     route_port=$(yq eval '.spec.port.targetPort' "$ROUTE_FILE")
     yq e ".route.port = \"$route_port\"" -i "$VALUES_FILE"
+    yq e ".route.tls = \"enabled\"" -i "$VALUES_FILE"
 else
     echo "$NAME -- Bu deployment için Route oluşturulmamıştır."
     yq e ".route.enabled = false" -i "$VALUES_FILE"
@@ -242,7 +243,7 @@ else
     for path in $CONFIGMAPS; do
         C_PATH=$(echo "$1" | sed "s|/[^/]*$|/$path.yaml|" | sed 's/deployment/configmap/g')
 	DATA=$(yq e '.data' $C_PATH)
-        yq eval ".configMaps += [{\"name\": \"$path\", \"data\": load(\"$C_PATH\") | .data}]"  -i "$VALUES_FILE"
+	yq eval ".configMaps += [{\"create\": \"true\", \"name\": \"$path\", \"data\": load(\"$C_PATH\") | .data}]"  -i "$VALUES_FILE"
     done
 fi
 
